@@ -1,0 +1,11 @@
+{
+	// This is a template for a game file. Copy this file to create a new game.
+	"title": "",
+	"description": "",
+	"author": "",
+	"version": "1.0.0",
+	"game": {
+		"title": "",
+		"amountOfPlayers": 1
+	}
+}
