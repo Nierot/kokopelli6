@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { Session, type Game } from '$lib/session'
+	import { Session, type Game, type Minigame } from '$lib/session'
 	import { getStorageItem } from '$lib/storage'
 	import { onMount } from 'svelte'
 	import './game.sass'
+	import { parseTime } from '$lib'
+	import PhGear from '~icons/ph/gear'
+	import type { IMinigame } from '$lib/games/_template'
 
 	let loading = $state(true)
 	let timer = $state(0)
@@ -36,16 +39,25 @@
 			// Start a new game with the default settings
 			session = Session.fromNothing()
 		}
+
+		session.on('next', onNextGame)
+		session.on('error', onError)
 	}
 
-	$effect(() => {
-		if (session) {
-			game = session.getCurrentGame()
-			song = session.getCurrentSong()
-		}
-	})
+	function onNextGame(nextGame: Minigame) {
+		// set new game state
+		// flash alert
+		// set new background
+	}
 
-	function changeBackground() {}
+	function onError(error: unknown) {
+		// Show error
+		// custom alert
+	}
+
+	function openSettings() {
+		alert()
+	}
 </script>
 
 {#snippet errorSnippet()}
@@ -66,6 +78,14 @@
 
 {#snippet gameSnippet(game)}
 	<div class="game">
+		<div class="header">
+			<div class="button"><button onclick={openSettings}><PhGear /></button></div>
+			<p>{game?.body?.title ?? 'Kokopelli'}</p>
+			<div class="time">
+				<p>{parseTime(timer)}</p>
+			</div>
+		</div>
+
 		<div class="content">
 			<h1>{game.body.title}</h1>
 			<h2>{game.body.content}</h2>
@@ -81,6 +101,11 @@
 {/snippet}
 
 <main>
+	<dialog>
+		<h1>Instellingen</h1>
+		<p>Instellingen komen hier</p>
+	</dialog>
+
 	{#if loading}
 		{@render loadingSnippet()}
 	{:else if game}
