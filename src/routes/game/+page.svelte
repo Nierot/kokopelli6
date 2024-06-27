@@ -7,7 +7,7 @@
 	import PhGear from '~icons/ph/gear'
 	import type { IMinigame } from '$lib/games/_template'
 	import { GameIntroduction } from '$lib/games/introduction'
-	import { renderGame } from '$lib/render'
+	import { renderGame, type RenderedGame } from '$lib/render'
 
 	let loading = $state(true)
 	let game = $state()
@@ -63,7 +63,11 @@
 		// set new background
 		game = nextGame
 		if (nextGame) {
-			gameRender = renderGame(nextGame, session?.getCurrentPlayers() ?? [])
+			let renderedGame = renderGame(nextGame, session?.getCurrentPlayers() ?? [])
+
+			gameRender = renderedGame
+
+			session?.updatePlayerScores(renderedGame.score ?? 0, renderedGame.selectedPlayers)
 		}
 	}
 

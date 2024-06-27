@@ -273,4 +273,20 @@ export class Session {
   getCurrentSong(): string | undefined {
     return this.game.currentSong
   }
+
+  updatePlayerScores(score: number, playersWhoScored: number[]): void {
+    console.log('Updating player scores', score, playersWhoScored)
+    if (score === 0 || playersWhoScored.length === 0) return
+
+    this.game.players = this.game.players.map((player) => {
+      console.log(player)
+      if (playersWhoScored.includes(player.id)) {
+        player.score = (player.score ?? 0) + score
+      }
+
+      return player
+    })
+
+    this.store()
+  }
 }

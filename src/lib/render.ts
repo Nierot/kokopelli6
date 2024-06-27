@@ -1,7 +1,9 @@
 import type { IMinigame, IMinigameBody } from './games/_template';
 import type { Player, PlayerArray } from './players';
 
-type RenderedGame = IMinigame
+export type RenderedGame = IMinigame & {
+  selectedPlayers: number[]
+}
 type RenderedBody = IMinigameBody
 
 const BRACKETS = /\{\{(.*?)\}\}/gm
@@ -70,6 +72,7 @@ export function renderGame(game: IMinigame, playerArray: PlayerArray): RenderedG
   const players = JSON.parse(JSON.stringify(playerArray))
 
   let score = game.score ?? 0
+  const selectedPlayers = []
 
   for (const [key, value] of Object.entries(game.body)) {
     let render = value
@@ -94,6 +97,7 @@ export function renderGame(game: IMinigame, playerArray: PlayerArray): RenderedG
           const [selectedIdx, selectedPlayer] = selectPlayer(players)
           // remove selected player from the player array
           players.splice(selectedIdx, 1)
+          selectedPlayers.push(selectedPlayer.id)
           render = render.replace(symbol, "<span class=\"player\">" + selectedPlayer.name + "</span>")
           // Rendering complete, nothing left to do for this symbol
           continue
@@ -143,26 +147,28 @@ export function renderGame(game: IMinigame, playerArray: PlayerArray): RenderedG
 
     body[key] = render
   }
-
-  console.log(body)
-
   return {
     ...game,
     score,
+    selectedPlayers,
     body: body as unknown as RenderedBody
   }
 }
 
+/**
+ * Select a player from the player array
+ * Every player has a score, so it first selects all players with the lowest score
+ * Then it takes a random player from that selection
+ * @returns [index, player] the index of the selected player and the player itself
+ */
 function selectPlayer(players: PlayerArray): [number, Player] {
-  // Select the player with the lowest score
-  let lp = players[0]
-  let index = 0
-  for (const [idx, player] of Object.entries(players)) {
-    if (player.score < lp.score) {
-      lp = player
-      index = Number.parseInt(idx)
-    }
-  }
+  // select all players with the lowest score
+  const lowestScore = Math.min(...players.map(p => p.score ?? 0))
+  const lowestPlayers = players.filter(p => p.score === lowestScore)
+
+  // select a random player from the lowest players
+  const index = Math.floor(Math.random() * lowestPlayers.length)
+  const lp = lowestPlayers[index]
 
   return [index, lp]
 }
