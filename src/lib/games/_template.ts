@@ -5,18 +5,20 @@
 //   duration: 60,
 //   body: {
 //     title: "Template game",
-//     content: "In dit spel verdiend {{player-1}} {{score}} punten"
+//     content: "In dit spel verdiend {{player[0]}} {{score}} punten"
 //   }
 // }
 
 export interface IMinigame {
   title: string
-  numberOfPlayer?: number
+  numberOfPlayers?: number
   score?: number
   duration: number
-  body: {
-    title: string
-    content: string
-    footer?: string
-  }
+  body: IMinigameBody
+}
+
+export interface IMinigameBody {
+  title: string
+  content: string
+  footer?: string
 }

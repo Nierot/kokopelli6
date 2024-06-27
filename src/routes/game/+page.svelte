@@ -6,15 +6,17 @@
 	import { parseTime } from '$lib'
 	import PhGear from '~icons/ph/gear'
 	import type { IMinigame } from '$lib/games/_template'
+	import { GameIntroduction } from '$lib/games/introduction'
+	import { renderGame } from '$lib/render'
 
 	let loading = $state(true)
-	let timer = $state(0)
 	let game = $state()
+	let gameRender = $state()
+	let timer = $state(0)
 	let song = $state()
 	let session = $state<Session>()
 
 	onMount(() => {
-		const timerInterval = setInterval(() => (timer += 1), 1000)
 		const loadingTimeout = setTimeout(() => (loading = false), 100)
 
 		const songInterval = setInterval(() => {})
@@ -23,7 +25,6 @@
 
 		return {
 			destroy() {
-				clearInterval(timerInterval)
 				clearTimeout(loadingTimeout)
 				clearInterval(songInterval)
 			},
@@ -42,17 +43,26 @@
 
 		session.on('next', onNextGame)
 		session.on('error', onError)
+		session.on('tick', onTick)
+
+		session.start()
 	}
 
 	function onNextGame(nextGame: Minigame) {
 		// set new game state
 		// flash alert
 		// set new background
+		game = nextGame
+		gameRender = renderGame(nextGame, session?.getCurrentPlayers() ?? [])
 	}
 
 	function onError(error: unknown) {
 		// Show error
 		// custom alert
+	}
+
+	function onTick(tick: number) {
+		timer = tick
 	}
 
 	function openSettings() {
@@ -71,7 +81,7 @@
 	<div class="loading">
 		<h1>
 			Kokopelli is aan het laden
-			<span class="dots">{'.'.repeat(1 + (timer % 3))}</span>
+			<span class="dots">{'.'.repeat(1 + ((timer ?? 0) % 3))}</span>
 		</h1>
 	</div>
 {/snippet}
@@ -82,11 +92,12 @@
 			<div class="button"><button onclick={openSettings}><PhGear /></button></div>
 			<p>{game?.body?.title ?? 'Kokopelli'}</p>
 			<div class="time">
-				<p>{parseTime(timer)}</p>
+				<p>{parseTime(timer ?? 0)}</p>
 			</div>
 		</div>
 
 		<div class="content">
+			<!-- {console.log({ game })} -->
 			<h1>{game.body.title}</h1>
 			<h2>{game.body.content}</h2>
 			<h3>{game.body.footer}</h3>
@@ -109,7 +120,7 @@
 	{#if loading}
 		{@render loadingSnippet()}
 	{:else if game}
-		{@render gameSnippet(game)}
+		{@render gameSnippet(gameRender)}
 	{:else if song}
 		{@render songSnippet(song)}
 	{:else}
