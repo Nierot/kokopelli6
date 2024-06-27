@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Session, type Game, type Minigame } from '$lib/session'
+	import { Session, type Game } from '$lib/session'
 	import { getStorageItem } from '$lib/storage'
 	import { onMount } from 'svelte'
 	import './game.sass'
@@ -15,6 +15,7 @@
 	let timer = $state(0)
 	let song = $state()
 	let session = $state<Session>()
+	let error = $state()
 
 	onMount(() => {
 		const loadingTimeout = setTimeout(() => (loading = false), 100)
@@ -34,31 +35,42 @@
 	function start() {
 		const oldGameState = getStorageItem<Game>('game-state')
 
-		if (oldGameState) {
-			session = Session.from(oldGameState)
-		} else {
-			// Start a new game with the default settings
-			session = Session.fromNothing()
+		try {
+			if (oldGameState && oldGameState.players.length > 0) {
+				session = Session.from(oldGameState)
+			} else {
+				// Start a new game with the default settings
+				session = Session.fromNothing()
+			}
+		} catch (err) {
+			console.error(err)
+			error = err
 		}
 
-		session.on('next', onNextGame)
-		session.on('error', onError)
-		session.on('tick', onTick)
+		// We can assume we have a session here
+		session = session!
+
+		session.on<'next'>('next', onNextGame)
+		session.on<'error'>('error', onError)
+		session.on<'tick'>('tick', onTick)
 
 		session.start()
 	}
 
-	function onNextGame(nextGame: Minigame) {
+	function onNextGame(nextGame: IMinigame | undefined) {
 		// set new game state
 		// flash alert
 		// set new background
 		game = nextGame
-		gameRender = renderGame(nextGame, session?.getCurrentPlayers() ?? [])
+		if (nextGame) {
+			gameRender = renderGame(nextGame, session?.getCurrentPlayers() ?? [])
+		}
 	}
 
-	function onError(error: unknown) {
+	function onError(err: unknown) {
 		// Show error
 		// custom alert
+		error = err
 	}
 
 	function onTick(tick: number) {
@@ -70,10 +82,10 @@
 	}
 </script>
 
-{#snippet errorSnippet()}
+{#snippet errorSnippet(err)}
 	<div class="error">
 		<h1>Er is iets misgegaan</h1>
-		<h3>Balen man...</h3>
+		<h3>{err ?? 'Balen man...'}</h3>
 	</div>
 {/snippet}
 
@@ -90,7 +102,7 @@
 	<div class="game">
 		<div class="header">
 			<div class="button"><button onclick={openSettings}><PhGear /></button></div>
-			<p>{game?.body?.title ?? 'Kokopelli'}</p>
+			<p>{@html game?.body?.title ?? 'Kokopelli'}</p>
 			<div class="time">
 				<p>{parseTime(timer ?? 0)}</p>
 			</div>
@@ -98,9 +110,9 @@
 
 		<div class="content">
 			<!-- {console.log({ game })} -->
-			<h1>{game.body.title}</h1>
-			<h2>{game.body.content}</h2>
-			<h3>{game.body.footer}</h3>
+			<h1>{@html game.body.title ?? ''}</h1>
+			<h2>{@html game.body.content ?? ''}</h2>
+			<h3>{@html game.body.footer ?? ''}</h3>
 		</div>
 	</div>
 {/snippet}
@@ -119,12 +131,14 @@
 
 	{#if loading}
 		{@render loadingSnippet()}
+	{:else if error}
+		{@render errorSnippet(error)}
 	{:else if game}
 		{@render gameSnippet(gameRender)}
 	{:else if song}
 		{@render songSnippet(song)}
 	{:else}
-		{@render errorSnippet()}
+		{@render errorSnippet(undefined)}
 	{/if}
 </main>
 

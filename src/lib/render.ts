@@ -6,10 +6,70 @@ type RenderedBody = IMinigameBody
 
 const BRACKETS = /\{\{(.*?)\}\}/gm
 const PLAYER_SYMBOL = /\{\{player\[(.*?)\]\}\}/m
+const RAND_SYMBOL = /\{\{rand-(\d+)-(\d+)\}\}/m
+
+const FULL_PUNISHMENTS = [
+  {
+    text: 'neem een shotje',
+    score: 12,
+  },
+  {
+    text: 'neem 1 slok',
+    score: 1
+  },
+  {
+    text: 'neem 2 slokken',
+    score: 2
+  },
+  {
+    text: 'neem 3 slokken',
+    score: 3
+  },
+  {
+    text: 'neem 4 slokken',
+    score: 4
+  },
+  {
+    text: 'neem 6 slokken',
+    score: 6
+  },
+  {
+    text: 'neem 8 slokken',
+    score: 8
+  }
+]
+
+const LIGHT_PUNISHMENTS = [
+  {
+    text: 'slok',
+    score: 1,
+  },
+  {
+    text: 'shot',
+    score: 12
+  },
+  {
+    text: 'bak',
+    score: 12
+  },
+  {
+    text: 'balen',
+    score: 4
+  },
+  {
+    text: 'halve leo',
+    score: 18
+  }
+]
+
+// TODO scores
 
 export function renderGame(game: IMinigame, playerArray: PlayerArray): RenderedGame {
   const body: Record<string, string> = {}
-  const players = playerArray
+  // make a deep copy
+  const players = JSON.parse(JSON.stringify(playerArray))
+
+  let score = game.score ?? 0
 
   for (const [key, value] of Object.entries(game.body)) {
     let render = value
@@ -34,7 +94,7 @@ export function renderGame(game: IMinigame, playerArray: PlayerArray): RenderedG
           const [selectedIdx, selectedPlayer] = selectPlayer(players)
           // remove selected player from the player array
           players.splice(selectedIdx, 1)
-          render = render.replace(symbol, selectedPlayer.name)
+          render = render.replace(symbol, "<span class=\"player\">" + selectedPlayer.name + "</span>")
           // Rendering complete, nothing left to do for this symbol
           continue
         }
@@ -43,6 +103,36 @@ export function renderGame(game: IMinigame, playerArray: PlayerArray): RenderedG
         match = symbol === '{{score}}'
         if (match) {
           render = render.replace(symbol, game.score ?? 0)
+          continue
+        }
+
+        match = symbol === '{{punishment-full}}'
+        if (match) {
+          // Select a random punishment
+          const punishment = FULL_PUNISHMENTS[Math.floor(Math.random() * FULL_PUNISHMENTS.length)]
+
+          score = punishment.score
+          render = render.replace(symbol, "<span class=\"punishment\">" + punishment.text + "</span>")
+          continue
+        }
+
+        match = symbol === '{{punishment-light}}'
+        if (match) {
+          const punishment = LIGHT_PUNISHMENTS[Math.floor(Math.random() * LIGHT_PUNISHMENTS.length)]
+
+          score = punishment.score
+          render = render.replace(symbol, "<span class=\"punishment\">" + punishment.text + "</span>")
+          continue
+        }
+
+        match = symbol.match(RAND_SYMBOL)
+        if (match) {
+          const min = Number.parseInt(match[1])
+          const max = Number.parseInt(match[2])
+
+          const rand = Math.floor(Math.random() * (max - min + 1) + min)
+
+          render = render.replace(symbol, "<span class=\"rand\">" + rand + "</span>")
           continue
         }
 
@@ -58,6 +148,7 @@ export function renderGame(game: IMinigame, playerArray: PlayerArray): RenderedG
 
   return {
     ...game,
+    score,
     body: body as unknown as RenderedBody
   }
 }

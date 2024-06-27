@@ -1,7 +1,7 @@
 import type { IMinigame } from './_template';
 
 export const GameIntroduction = {
-  title: 'Welkom bij Kokopelli',
+  id: 'Welkom bij Kokopelli',
   duration: 5,
   body: {
     title: "Welkom bij Kokopelli",

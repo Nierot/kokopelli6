@@ -26,6 +26,7 @@
 	function removePlayer(id: number) {
 		const index = players.findIndex(player => player.id === id)
 		players.splice(index, 1)
+
 		setStorageItem('players', players)
 	}
 

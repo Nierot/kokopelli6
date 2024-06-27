@@ -10,7 +10,7 @@
 // }
 
 export interface IMinigame {
-  title: string
+  id: string
   numberOfPlayers?: number
   score?: number
   duration: number
