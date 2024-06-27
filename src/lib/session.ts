@@ -9,6 +9,7 @@ import { GameCrazy88 } from './games/crazy88'
 import { GameDrinkingBuddies } from './games/drinking-buddies'
 import { GameDrunk } from './games/drunk'
 import { GameDuctTape } from './games/duct-tape'
+import { GracePeriod } from './games/grace-period'
 import { GameIntroduction } from './games/introduction'
 import { GameJoostKlein7Stijl } from './games/joost-klein-7-stijl'
 import { GameKnight } from './games/knight'
@@ -128,6 +129,18 @@ export class Session {
 
 
   private nextGame() {
+    if (this.game.currentGame && (this.game.currentGame.id !== 'grace-period' && this.game.currentGame.id !== 'introduction')) {
+      this.game = {
+        ...this.game,
+        currentGame: GracePeriod
+      }
+
+      this.timeLeft = GracePeriod.duration
+
+      this.emit('next', GracePeriod)
+      return
+    }
+
     // First select all games that are not the current game, and also supports the amount of players
     const availableGames = ALL_MINIGAMES.filter(game => game !== this.game.currentGame && this.game.players.length >= game.numberOfPlayers)
 
